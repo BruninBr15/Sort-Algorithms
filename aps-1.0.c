@@ -15,20 +15,26 @@ void inicializarLeitor(LeitorArquivo *leitor) {
     leitor->numeros = (int *)malloc(leitor->capacidade * sizeof(int));
 }
 
-// Função para redimensionar o vetor se necessário
+// Redimensiona o vetor se o Vetor ficar cheio
 void redimensionar(LeitorArquivo *leitor) {
-    leitor->capacidade *= 2;
-    leitor->numeros = (int *)realloc(leitor->numeros, leitor->capacidade * sizeof(int));
+    int novaCapacidade = leitor->capacidade * 2;
+    int *novoVetor = (int *)realloc(leitor->numeros, novaCapacidade * sizeof(int));
+    if (novoVetor == NULL) {
+        printf("Erro ao realocar memória.\n");
+        exit(1);
+    }
+    leitor->numeros = novoVetor;
+    leitor->capacidade = novaCapacidade;
 }
 
-// Função para ler o arquivo e preencher o vetor de números
+//Leitura do arquivo e armazenamento dos números no vetor
 void lerArquivo(LeitorArquivo *leitor, const char *caminhoDoArquivo) {
     FILE *file = fopen(caminhoDoArquivo, "r");
     if (!file) {
         printf("Ocorreu um erro ao tentar ler o arquivo.\n");
         return;
     }
-    
+
     char linha[256];
     while (fgets(linha, sizeof(linha), file)) {
         int numero;
@@ -41,7 +47,8 @@ void lerArquivo(LeitorArquivo *leitor, const char *caminhoDoArquivo) {
             printf("Valor inválido encontrado e ignorado: %s", linha);
         }
     }
-    fclose(file);
+
+    fclose(file); // Fecha o arquivo dentro do bloco if
 }
 
 // Função para exibir os dados
@@ -53,7 +60,6 @@ void exibirDados(int *dados, int tamanho) {
     printf("\n");
 }
 
-// Função para ordenar o vetor usando Insertion Sort
 void insertionSort(int *dados, int tamanho) {
     for (int i = 1; i < tamanho; i++) {
         int chave = dados[i];
@@ -66,16 +72,16 @@ void insertionSort(int *dados, int tamanho) {
     }
 }
 
-// Função para trocar dois elementos
+// Troca de elementos para o QuickSort
 void swap(int *a, int *b) {
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-// Função para fazer a partição do array (usada pelo QuickSort)
-int partition(int arr[], int low, int high) {
-    int pivot = arr[high]; // Escolhendo o último elemento como pivot
+// Divisão do vetor para o QuickSort
+int partição(int arr[], int low, int high) {
+    int pivot = arr[high]; // Escolhendo o último elemento como pivô
     int i = (low - 1); // Índice do menor elemento
 
     for (int j = low; j <= high - 1; j++) {
@@ -88,12 +94,26 @@ int partition(int arr[], int low, int high) {
     return (i + 1);
 }
 
-// Função para implementar o algoritmo QuickSort
 void quickSort(int arr[], int low, int high) {
     if (low < high) {
-        int pi = partition(arr, low, high);
+        int pi = partição(arr, low, high);
         quickSort(arr, low, pi - 1);
         quickSort(arr, pi + 1, high);
+    }
+}
+
+void bubbleSort(int arr[], int n) {
+    int i, j, swapped;
+    for (i = 0; i < n - 1; i++) {
+        swapped = 0;
+        for (j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                swap(&arr[j], &arr[j + 1]);
+                swapped = 1;
+            }
+        }
+        if (swapped == 0)
+            break;
     }
 }
 
@@ -111,27 +131,41 @@ int main() {
 
     // Escolher o método de ordenação
     int escolha;
-    printf("Escolha o método de ordenação:\n1 - Insertion Sort\n2 - QuickSort\n");
-    scanf("%d", &escolha);
 
-    // Ordenar os dados com base na escolha
-    if (escolha == 1) {
-        insertionSort(leitor.numeros, leitor.tamanho);
-        printf("Dados após a ordenação (Insertion Sort):\n");
-    } else if (escolha == 2) {
-        quickSort(leitor.numeros, 0, leitor.tamanho - 1);
-        printf("Dados após a ordenação (QuickSort):\n");
-    } else {
+    do {
+        printf("Escolha o método de ordenação:\n");
+        printf("1 - Insertion Sort\n");
+        printf("2 - QuickSort\n");
+        printf("3 - BubbleSort\n");
+        printf("0 - Sair\n");
+        scanf("%d", &escolha);
+
+        switch (escolha) {
+            case 1:
+                insertionSort(leitor.numeros, leitor.tamanho);
+                printf("Dados ordenados com Insertion Sort:\n");
+                break;
+            case 2:
+                quickSort(leitor.numeros, 0, leitor.tamanho - 1);
+                printf("Dados ordenados com QuickSort:\n");
+                break;
+            case 3:
+                bubbleSort(leitor.numeros, leitor.tamanho);
+                printf("Dados ordenados com Bubble Sort:\n");
+                break;
+            case 0:
+                printf("Saindo do programa.\n");
+                break;
+            default:
+                printf("Escolha inválida.\n");
+        }
+
+        if (escolha != 0) {
+            exibirDados(leitor.numeros, leitor.tamanho);
+        }
+    } while (escolha != 0);
         printf("Escolha inválida.\n");
         free(leitor.numeros);
-        return 1;
-    }
-
-    // Exibir os dados após a ordenação
-    exibirDados(leitor.numeros, leitor.tamanho);
-
-    // Liberar a memória alocada
-    free(leitor.numeros);
 
     return 0;
 }
