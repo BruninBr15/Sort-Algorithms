@@ -15,7 +15,7 @@ void inicializarLeitor(LeitorArquivo *leitor) {
     leitor->numeros = (int *)malloc(leitor->capacidade * sizeof(int));
 }
 
-// Redimensiona o vetor se o Vetor ficar cheio
+// Redimensiona o vetor se o vetor ficar cheio
 void redimensionar(LeitorArquivo *leitor) {
     int novaCapacidade = leitor->capacidade * 2;
     int *novoVetor = (int *)realloc(leitor->numeros, novaCapacidade * sizeof(int));
@@ -27,7 +27,7 @@ void redimensionar(LeitorArquivo *leitor) {
     leitor->capacidade = novaCapacidade;
 }
 
-//Leitura do arquivo e armazenamento dos números no vetor
+// Leitura do arquivo e armazenamento dos números no vetor
 void lerArquivo(LeitorArquivo *leitor, const char *caminhoDoArquivo) {
     FILE *file = fopen(caminhoDoArquivo, "r");
     if (!file) {
@@ -48,7 +48,7 @@ void lerArquivo(LeitorArquivo *leitor, const char *caminhoDoArquivo) {
         }
     }
 
-    fclose(file); // Fecha o arquivo dentro do bloco if
+    fclose(file); // Fecha o arquivo
 }
 
 // Função para exibir os dados
@@ -60,61 +60,79 @@ void exibirDados(int *dados, int tamanho) {
     printf("\n");
 }
 
-void insertionSort(int *dados, int tamanho) {
-    for (int i = 1; i < tamanho; i++) {
-        int chave = dados[i];
-        int j = i - 1;
-        while (j >= 0 && dados[j] > chave) {
-            dados[j + 1] = dados[j];
-            j = j - 1;
+// Função Insertion Sort
+void InsertionSort(int* v, int tam) {
+    int i, j, chave;
+    int trocas = 0;
+    for (j = 1; j < tam; j++) {
+        chave = v[j];
+        i = j - 1;
+        while ((i >= 0) && (v[i] > chave)) {
+            v[i + 1] = v[i];
+            i--;
+            trocas++;
         }
-        dados[j + 1] = chave;
+        v[i + 1] = chave;
     }
+    printf("Quantidade de trocas no InsertionSort: %d\n", trocas);
 }
 
-// Troca de elementos para o QuickSort
-void swap(int *a, int *b) {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
+// Função QuickSort corrigida
+void QuickSort(int* v, int tam, int* trocas) {
+    int j = tam, k;
+    if (tam <= 1)
+        return;
 
-// Divisão do vetor para o QuickSort
-int partição(int arr[], int low, int high) {
-    int pivot = arr[high]; // Escolhendo o último elemento como pivô
-    int i = (low - 1); // Índice do menor elemento
+    int x = v[0];  // pivô
+    int a = 1;
+    int b = tam - 1;
 
-    for (int j = low; j <= high - 1; j++) {
-        if (arr[j] < pivot) { // Se o elemento atual é menor que o pivot
-            i++; // Incrementa o índice do menor elemento
-            swap(&arr[i], &arr[j]);
+    do {
+        while ((a < tam) && (v[a] <= x))
+            a++;
+        while (v[b] > x)
+            b--;
+
+        if (a < b) {  // faz a troca
+            int temp = v[a];
+            v[a] = v[b];
+            v[b] = temp;
+            a++;
+            b--;
+            (*trocas)++;
         }
-    }
-    swap(&arr[i + 1], &arr[high]);
-    return (i + 1);
+        
+    } while (a <= b);
+
+    // Troca o pivô para a posição correta
+    v[0] = v[b];
+    v[b] = x;
+    (*trocas)++;
+
+    // Ordena sub-vetores restantes
+    QuickSort(v, b, trocas);
+    QuickSort(&v[a], tam - a, trocas);
 }
 
-void quickSort(int arr[], int low, int high) {
-    if (low < high) {
-        int pi = partição(arr, low, high);
-        quickSort(arr, low, pi - 1);
-        quickSort(arr, pi + 1, high);
-    }
-}
-
-void bubbleSort(int arr[], int n) {
-    int i, j, swapped;
-    for (i = 0; i < n - 1; i++) {
-        swapped = 0;
-        for (j = 0; j < n - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
-                swap(&arr[j], &arr[j + 1]);
-                swapped = 1;
+// Função BubbleSort corrigida
+void BubbleSort(int* v, int tam, int* trocas) {
+    int i;
+    int trocou;
+    *trocas = 0; // Inicializa o contador de trocas
+    do {
+        tam--;
+        trocou = 0;
+        for (i = 0; i < tam; i++) {
+            if (v[i] > v[i + 1]) {
+                int aux = v[i];
+                v[i] = v[i + 1];
+                v[i + 1] = aux;
+                trocou = 1;
+                (*trocas)++;
             }
         }
-        if (swapped == 0)
-            break;
-    }
+    } while (trocou);
+    printf("Quantidade de trocas no BubbleSort: %d\n", *trocas);
 }
 
 // Função principal
@@ -140,19 +158,28 @@ int main() {
         printf("0 - Sair\n");
         scanf("%d", &escolha);
 
+        // Cria uma cópia dos dados originais para cada método de ordenação
+        int* copiaDados = (int*)malloc(leitor.tamanho * sizeof(int));
+        memcpy(copiaDados, leitor.numeros, leitor.tamanho * sizeof(int));
+
         switch (escolha) {
             case 1:
-                insertionSort(leitor.numeros, leitor.tamanho);
+                InsertionSort(copiaDados, leitor.tamanho);
                 printf("Dados ordenados com Insertion Sort:\n");
                 break;
-            case 2:
-                quickSort(leitor.numeros, 0, leitor.tamanho - 1);
+            case 2: {
+                int trocas = 0;
+                QuickSort(copiaDados, leitor.tamanho, &trocas);
+                printf("Quantidade de trocas no QuickSort: %d\n", trocas);
                 printf("Dados ordenados com QuickSort:\n");
                 break;
-            case 3:
-                bubbleSort(leitor.numeros, leitor.tamanho);
+            }
+            case 3: {
+                int trocas = 0;
+                BubbleSort(copiaDados, leitor.tamanho, &trocas);
                 printf("Dados ordenados com Bubble Sort:\n");
                 break;
+            }
             case 0:
                 printf("Saindo do programa.\n");
                 break;
@@ -161,11 +188,16 @@ int main() {
         }
 
         if (escolha != 0) {
-            exibirDados(leitor.numeros, leitor.tamanho);
+            exibirDados(copiaDados, leitor.tamanho);
         }
+
+        // Libera a cópia dos dados
+        free(copiaDados);
+        
     } while (escolha != 0);
-        printf("Escolha inválida.\n");
-        free(leitor.numeros);
+
+    // Libera a memória alocada
+    free(leitor.numeros);
 
     return 0;
 }
