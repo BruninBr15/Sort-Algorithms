@@ -141,7 +141,7 @@ int main() {
     inicializarLeitor(&leitor);
 
     // Ler o arquivo e popular a lista de números
-    lerArquivo(&leitor, "DadosAPS/500/Com Duplicidade/Aleatorio/dtaleat500dup0.txt");
+    lerArquivo(&leitor, "500_num_Aleat.txt");
 
     // Exibir os dados antes da ordenação
     printf("Dados antes da ordenação:\n");
